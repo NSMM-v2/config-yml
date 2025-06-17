@@ -1,0 +1,178 @@
+# =================================
+# ESG Gateway Service 설정
+# 역할: API 게이트웨이, JWT 인증, 라우팅, CORS 처리
+# 포트: 8080 (클라이언트 진입점)
+# =================================
+
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+
+spring:
+  application:
+    name: gateway-service
+
+  # =================================
+  # Config Server 설정
+  # =================================
+  config:
+    import: optional:configserver:http://localhost:8888
+
+  # =================================
+  # Spring Cloud Gateway 설정
+  # =================================
+  cloud:
+    gateway:
+      # =================================
+      # 라우팅 규칙
+      # =================================
+      routes:
+      # Auth Service 라우팅 - 인증/권한 관리
+      - id: auth-service
+        uri: lb://auth-service
+        predicates:
+        - Path=/api/v1/headquarters/**, /api/v1/partners/**
+        filters:
+        - name: JwtAuthenticationGatewayFilter
+          args:
+            exclude-paths: |
+              /api/v1/headquarters/register,
+              /api/v1/headquarters/login,
+              /api/v1/headquarters/check-email,
+              /api/v1/headquarters/next-account-number,
+              /api/v1/headquarters/validate-account-number,
+              /api/v1/partners/login,
+              /api/v1/partners/check-email
+        - name: Retry
+          args:
+            retries: 3
+            methods: GET,POST
+
+      # CSDDD Service 라우팅 - ESG 공시 데이터
+      - id: csddd-service
+        uri: lb://csddd-service
+        predicates:
+        - Path=/api/v1/csddd/**
+        filters:
+        - name: JwtAuthenticationGatewayFilter
+        - name: Retry
+          args:
+            retries: 3
+            methods: GET,POST
+      # =================================
+      # 글로벌 CORS 설정
+      # =================================
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins:
+            - "http://localhost:3000" # React 개발서버
+            - "${CORS_ALLOWED_ORIGINS:}" # 환경변수로 추가 도메인
+            allowed-methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+            allowed-headers: "*"
+            exposed-headers:
+            - "X-Total-Count"
+            - "X-Page-Count"
+            allow-credentials: true
+            max-age: 3600
+
+      # =================================
+      # 글로벌 필터 설정
+      # =================================
+      default-filters:
+      - name: RequestRateLimiter
+        args:
+          redis-rate-limiter.replenish-rate: 100 # 초당 100 요청
+          redis-rate-limiter.burst-capacity: 200 # 버스트 200 요청
+      - name: CircuitBreaker
+        args:
+          name: default-circuit-breaker
+          fallbackUri: forward:/fallback
+
+# =================================
+# JWT 설정 (Auth Service와 동일해야 함)
+# =================================
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly123456789}
+  expiration: 900000 # 15분 (밀리초)
+
+# =================================
+# Eureka Client 설정
+# =================================
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      version: ${spring.application.version:1.0.0}
+      description: "ESG API Gateway - 라우팅, 인증, CORS"
+
+# =================================
+# Actuator 모니터링 설정
+# =================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  info:
+    env:
+      enabled: true
+
+# =================================
+# 로깅 설정
+# =================================
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    com.nsmm.esg.gateway_service: DEBUG
+    reactor.netty.http.server: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/gateway-service.log
+    max-size: 10MB
+    max-history: 30
+
+    # 헤더 관리
+    headers:
+      # JWT에서 추출하여 하위 서비스로 전달할 헤더들
+      jwt-to-header-mapping:
+      - jwt-claim: "userId"
+        header-name: "X-User-Id"
+      - jwt-claim: "userType"
+        header-name: "X-User-Type"
+      - jwt-claim: "headquartersId"
+        header-name: "X-Headquarters-Id"
+      - jwt-claim: "accountNumber"
+        header-name: "X-Account-Number"
+      - jwt-claim: "companyName"
+        header-name: "X-Company-Name"
+      - jwt-claim: "level"
+        header-name: "X-Level"
+      - jwt-claim: "treePath"
+        header-name: "X-Tree-Path"

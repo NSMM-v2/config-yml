@@ -1,0 +1,154 @@
+# =================================
+# ESG Auth Service 설정
+# 역할: 본사/협력사 인증, JWT 토큰 관리, 계층적 권한 시스템
+# 포트: 8081
+# =================================
+
+server:
+  port: 8081
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: auth-service
+
+  # =================================
+  # 데이터베이스 설정 - MySQL
+  # =================================
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/esg_auth}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME:esg_user}
+    password: ${DB_PASSWORD:esg_password}
+    hikari:
+      # 커넥션 풀 설정
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+
+  # =================================
+  # JPA/Hibernate 설정
+  # =================================
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update} # create, update, validate, none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: ${JPA_SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        use_sql_comments: true
+        default_batch_fetch_size: 100
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+
+  # =================================
+  # Config Server 설정
+  # =================================
+  config:
+    import: optional:configserver:http://localhost:8888
+
+# =================================
+# JWT 인증 설정
+# =================================
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly123456789}
+  expiration: 900000 # Access Token: 15분 (밀리초)
+  refresh-expiration: 604800000 # Refresh Token: 7일 (밀리초)
+  cookie:
+    name: jwt
+    max-age: 900 # 쿠키 만료시간: 15분 (초)
+    secure: ${JWT_COOKIE_SECURE:false} # HTTPS에서만 전송 (운영환경: true)
+    http-only: true # XSS 방지
+    same-site: strict # CSRF 방지
+
+# =================================
+# Eureka Client 설정
+# =================================
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      version: ${spring.application.version:1.0.0}
+      description: "ESG 인증 서비스 - 본사/협력사 로그인, JWT 관리"
+
+# =================================
+# Actuator 모니터링 설정
+# =================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,configprops
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# =================================
+# 로깅 설정
+# =================================
+logging:
+  level:
+    root: INFO
+    com.nsmm.esg.auth_service: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/auth-service.log
+    max-size: 10MB
+    max-history: 30
+
+# =================================
+# ESG 프로젝트 커스텀 설정
+# =================================
+esg:
+  auth:
+    # 본사 계정번호 생성 규칙
+    headquarters:
+      account-prefix: "" # 본사는 접두사 없음 (YYMMDDXX)
+      account-pattern: "^\\d{8}$" # 8자리 숫자
+    # 협력사 계정번호 생성 규칙  
+    partner:
+      account-pattern: "^\\d{8}-L\\d+-\\d{3}$" # 본사ID-L레벨-순번
+      max-level: 3 # 최대 협력사 레벨
+      initial-password-length: 12 # 초기 비밀번호 길이
+
+  # 보안 정책
+  security:
+    password:
+      min-length: 8
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special: true
+    session:
+      max-concurrent: 3 # 동시 로그인 세션 수
+      timeout-minutes: 30 # 세션 타임아웃

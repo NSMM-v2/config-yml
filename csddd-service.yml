@@ -1,0 +1,166 @@
+# =================================
+# ESG CSDDD Service 설정
+# 역할: CSDDD 공시 데이터 관리, ESG 리포팅
+# 포트: 8083
+# =================================
+
+server:
+  port: 8083
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+
+spring:
+  application:
+    name: csddd-service
+
+  # =================================
+  # 데이터베이스 설정 - MySQL (Auth Service와 공유)
+  # =================================
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/esg_auth}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME:esg_user}
+    password: ${DB_PASSWORD:esg_password}
+    hikari:
+      # 커넥션 풀 설정
+      maximum-pool-size: 15
+      minimum-idle: 3
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  # =================================
+  # JPA/Hibernate 설정
+  # =================================
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: ${JPA_SHOW_SQL:false} # CSDDD는 대용량 데이터 처리로 false 권장
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        default_batch_fetch_size: 50
+        jdbc:
+          batch_size: 30
+          order_inserts: true
+          order_updates: true
+
+  # =================================
+  # Config Server 설정
+  # =================================
+  config:
+    import: optional:configserver:http://localhost:8888
+
+# =================================
+# Eureka Client 설정
+# =================================
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 30
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      version: ${spring.application.version:1.0.0}
+      description: "ESG CSDDD 서비스 - 공시 데이터 관리"
+
+# =================================
+# Actuator 모니터링 설정
+# =================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# =================================
+# 로깅 설정
+# =================================
+logging:
+  level:
+    root: INFO
+    com.nsmm.esg.csddd_service: DEBUG
+    org.hibernate.SQL: ${LOG_SQL:false} # 대용량 처리시 false 권장
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/csddd-service.log
+    max-size: 10MB
+    max-history: 30
+
+# =================================
+# ESG CSDDD 커스텀 설정
+# =================================
+esg:
+  csddd:
+    # 데이터 검증 규칙
+    validation:
+      # Scope 1 배출량 검증
+      scope1:
+        allow-negative: false
+        max-value: 999999999
+        required-unit: "tCO2eq"
+      # Scope 2 배출량 검증  
+      scope2:
+        allow-negative: false
+        max-value: 999999999
+        required-unit: "tCO2eq"
+      # Scope 3 배출량 검증
+      scope3:
+        allow-negative: false
+        max-value: 999999999
+        required-unit: "tCO2eq"
+
+    # 공시 기간 설정
+    reporting:
+      # 기본 보고 연도 (현재년도 - 1)
+      default-year: 2024
+      # 최소 보고 연도
+      min-year: 2020
+      # 최대 보고 연도 (현재년도 + 1)
+      max-year: 2025
+      # 분기별 보고 지원 여부
+      quarterly-reporting: true
+
+    # 배치 처리 설정
+    batch:
+      # 대용량 데이터 처리 청크 크기
+      chunk-size: 1000
+      # 동시 처리 스레드 수
+      thread-pool-size: 5
+      # 처리 타임아웃 (분)
+      timeout-minutes: 60
+
+    # 외부 API 연동 설정
+    external-api:
+      # 탄소 배출 계수 API
+      carbon-factor-api:
+        enabled: ${CARBON_API_ENABLED:false}
+        url: ${CARBON_API_URL:}
+        api-key: ${CARBON_API_KEY:}
+        timeout-seconds: 30
+
+      # 정부 공시 시스템 연동
+      government-api:
+        enabled: ${GOV_API_ENABLED:false}
+        url: ${GOV_API_URL:}
+        timeout-seconds: 60

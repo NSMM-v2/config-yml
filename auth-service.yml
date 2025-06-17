@@ -125,30 +125,3 @@ logging:
     name: logs/auth-service.log
     max-size: 10MB
     max-history: 30
-
-# =================================
-# ESG 프로젝트 커스텀 설정
-# =================================
-esg:
-  auth:
-    # 본사 계정번호 생성 규칙
-    headquarters:
-      account-prefix: "" # 본사는 접두사 없음 (YYMMDDXX)
-      account-pattern: "^\\d{8}$" # 8자리 숫자
-    # 협력사 계정번호 생성 규칙  
-    partner:
-      account-pattern: "^\\d{8}-L\\d+-\\d{3}$" # 본사ID-L레벨-순번
-      max-level: 3 # 최대 협력사 레벨
-      initial-password-length: 12 # 초기 비밀번호 길이
-
-  # 보안 정책
-  security:
-    password:
-      min-length: 8
-      require-uppercase: true
-      require-lowercase: true
-      require-digit: true
-      require-special: true
-    session:
-      max-concurrent: 3 # 동시 로그인 세션 수
-      timeout-minutes: 30 # 세션 타임아웃

@@ -62,41 +62,6 @@ spring:
           args:
             retries: 3
             methods: GET,POST
-      # =================================
-      # 글로벌 CORS 설정
-      # =================================
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowed-origins:
-            - "http://localhost:3000" # React 개발서버
-            - "${CORS_ALLOWED_ORIGINS:}" # 환경변수로 추가 도메인
-            allowed-methods:
-            - GET
-            - POST
-            - PUT
-            - PATCH
-            - DELETE
-            - OPTIONS
-            allowed-headers: "*"
-            exposed-headers:
-            - "X-Total-Count"
-            - "X-Page-Count"
-            allow-credentials: true
-            max-age: 3600
-
-      # =================================
-      # 글로벌 필터 설정
-      # =================================
-      default-filters:
-      - name: RequestRateLimiter
-        args:
-          redis-rate-limiter.replenish-rate: 100 # 초당 100 요청
-          redis-rate-limiter.burst-capacity: 200 # 버스트 200 요청
-      - name: CircuitBreaker
-        args:
-          name: default-circuit-breaker
-          fallbackUri: forward:/fallback
 
 # =================================
 # JWT 설정 (Auth Service와 동일해야 함)

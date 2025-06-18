@@ -38,30 +38,7 @@ spring:
         filters:
         - name: JwtAuthenticationGatewayFilter
           args:
-            exclude-paths: |
-              /api/v1/headquarters/register,
-              /api/v1/headquarters/login,
-              /api/v1/headquarters/check-email,
-              /api/v1/headquarters/next-account-number,
-              /api/v1/headquarters/validate-account-number,
-              /api/v1/partners/login,
-              /api/v1/partners/check-email
-        - name: Retry
-          args:
-            retries: 3
-            methods: GET,POST
-
-      # CSDDD Service 라우팅 - ESG 공시 데이터
-      - id: csddd-service
-        uri: lb://csddd-service
-        predicates:
-        - Path=/api/v1/csddd/**
-        filters:
-        - name: JwtAuthenticationGatewayFilter
-        - name: Retry
-          args:
-            retries: 3
-            methods: GET,POST
+            exclude-paths: /api/v1/headquarters/register,/api/v1/headquarters/login,/api/v1/headquarters/check-email,/api/v1/headquarters/next-account-number,/api/v1/headquarters/validate-account-number,/api/v1/partners/login,/api/v1/partners/check-email
 
 # =================================
 # JWT 설정 (Auth Service와 동일해야 함)

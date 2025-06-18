@@ -15,7 +15,7 @@ spring:
       - id: csddd-service
         uri: lb://csddd-service
         predicates:
-        - Path=/api/vi/csddd/**
+        - Path=/api/v1/csddd/**
 
 jwt:
   secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly123456789}

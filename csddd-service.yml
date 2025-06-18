@@ -5,93 +5,95 @@
 # =================================
 
 server:
-  port: 8083
+  port: 8083 # 서비스 실행 포트 (다른 서비스와 충돌 방지)
   servlet:
-    context-path: /
+    context-path: / # 애플리케이션 루트 경로 (기본 /)
     encoding:
-      charset: UTF-8
-      enabled: true
+      charset: UTF-8 # 문자 인코딩 (한국어 지원)
+      enabled: true # 인코딩 설정 활성화
 
 spring:
   application:
-    name: csddd-service
+    name: csddd-service # 서비스 식별명 (Eureka 등록시 사용)
 
   # =================================
-  # 데이터베이스 설정 - MySQL (Auth Service와 공유)
+  # 데이터베이스 설정 - MySQL 
   # =================================
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/esg_auth}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${DB_USERNAME:esg_user}
-    password: ${DB_PASSWORD:esg_password}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/esg_auth} # 데이터베이스 연결 URL (환경변수 우선)
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.0+ 드라이버
+    username: ${DB_USERNAME:esg_user} # 데이터베이스 사용자명
+    password: ${DB_PASSWORD:esg_password} # 데이터베이스 비밀번호
     hikari:
-      # 커넥션 풀 설정
-      maximum-pool-size: 15
-      minimum-idle: 3
-      connection-timeout: 20000
-      idle-timeout: 300000
-      max-lifetime: 1200000
+      # HikariCP 커넥션 풀 설정
+      maximum-pool-size: 15 # 최대 연결 수 (동시 처리 가능한 DB 연결)
+      minimum-idle: 3 # 최소 유지 연결 수 (항상 열려있는 연결)
+      connection-timeout: 20000 # 연결 대기 시간 (20초, 밀리초)
+      idle-timeout: 300000 # 유휴 연결 해제 시간 (5분)
+      max-lifetime: 1200000 # 연결 최대 유지 시간 (20분)
 
   # =================================
   # JPA/Hibernate 설정
   # =================================
   jpa:
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
+      ddl-auto: ${JPA_DDL_AUTO:update} # 테이블 스키마 관리 (update: 변경사항만 반영)
       naming:
-        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
-    show-sql: ${JPA_SHOW_SQL:false} # CSDDD는 대용량 데이터 처리로 false 권장
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy # camelCase -> snake_case 변환
+    show-sql: ${JPA_SHOW_SQL:false} # SQL 쿼리 콘솔 출력 여부 (대용량 처리시 false 권장)
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
-        default_batch_fetch_size: 50
+        dialect: org.hibernate.dialect.MySQLDialect # MySQL 전용 SQL 방언
+        format_sql: true # SQL 쿼리 포매팅 (가독성 향상)
+        default_batch_fetch_size: 50 # 지연로딩시 한번에 가져올 개수 (N+1 문제 해결)
         jdbc:
-          batch_size: 30
-          order_inserts: true
-          order_updates: true
+          batch_size: 30 # 배치 삽입/수정시 묶음 단위
+          order_inserts: true # INSERT 문 정렬 (배치 효율성 향상)
+          order_updates: true # UPDATE 문 정렬 (배치 효율성 향상)
 
 # =================================
-# Eureka Client 설정
+# Eureka Client 설정 (서비스 디스커버리)
 # =================================
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
-    fetch-registry: true
-    register-with-eureka: true
-    registry-fetch-interval-seconds: 30
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/} # Eureka 서버 주소
+    fetch-registry: true # 다른 서비스 목록 가져오기
+    register-with-eureka: true # 자신을 Eureka에 등록
+    registry-fetch-interval-seconds: 30 # 서비스 목록 갱신 주기 (30초)
   instance:
-    prefer-ip-address: true
-    lease-renewal-interval-in-seconds: 30
-    lease-expiration-duration-in-seconds: 90
+    prefer-ip-address: true # 서비스 등록시 IP 주소 사용 (호스트명 대신)
+    lease-renewal-interval-in-seconds: 30 # 하트비트 전송 주기 (30초)
+    lease-expiration-duration-in-seconds: 90 # 서비스 만료 시간 (90초)
     metadata-map:
-      version: ${spring.application.version:1.0.0}
-      description: "ESG CSDDD 서비스 - 공시 데이터 관리"
+      # 서비스 메타데이터
+      version: ${spring.application.version:1.0.0} # 서비스 버전
+      description: "ESG CSDDD 서비스 - 공시 데이터 관리" # 서비스 설명
 
 # =================================
-# Actuator 모니터링 설정
+# Actuator 모니터링 설정 (헬스체크, 메트릭)
 # =================================
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,env
-      base-path: /actuator
+        include: health,info,metrics,env # 공개할 엔드포인트 목록
+      base-path: /actuator # 모니터링 엔드포인트 기본 경로
   endpoint:
     health:
-      show-details: always
+      show-details: always # 헬스체크 상세 정보 항상 표시
   info:
     env:
-      enabled: true
+      enabled: true # 환경 정보 엔드포인트 활성화
 
 # =================================
-# 콘솔 로깅 설정 (파일 로깅 제거)
+# 콘솔 로깅 설정 (개발환경 최적화)
 # =================================
 logging:
   level:
-    root: INFO
-    com.nsmm.esg.csddd_service: DEBUG
-    org.hibernate.SQL: ${LOG_SQL:false} # 대용량 처리시 false 권장
+    # 로그 레벨 설정
+    root: INFO # 전체 기본 로그 레벨
+    com.nsmm.esg.csddd_service: DEBUG # 자체 패키지 상세 로그
+    org.hibernate.SQL: ${LOG_SQL:false} # SQL 쿼리 로그 (환경변수로 제어)
   pattern:
-    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n"
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n" # 컬러풀한 콘솔 출력 패턴

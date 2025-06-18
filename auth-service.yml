@@ -10,7 +10,6 @@ server:
     encoding:
       charset: UTF-8
       enabled: true
-      force: true
 
 spring:
   application:
@@ -26,12 +25,12 @@ spring:
     password: ${DB_PASSWORD:esg_password}
     hikari:
       # 커넥션 풀 설정
-      maximum-pool-size: 20
+      maximum-pool-size: 15
       minimum-idle: 5
       connection-timeout: 20000
       idle-timeout: 300000
       max-lifetime: 1200000
-      leak-detection-threshold: 60000
+      leak-detection-threshold: 60000 # 긴 트랜잭션 감지 (성능 모니터링용)
 
   # =================================
   # JPA/Hibernate 설정
@@ -100,3 +99,17 @@ management:
   info:
     env:
       enabled: true
+
+# =================================
+# 콘솔 로깅 설정 
+# =================================
+logging:
+  level:
+    root: INFO
+    com.nsmm.esg.auth_service: DEBUG
+    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO} # 보안 관련 로그
+    org.springframework.web: ${WEB_LOG_LEVEL:INFO} # 웹 요청 로그
+    org.hibernate.SQL: ${LOG_SQL:false} # SQL 로그 (개발시에만 true 권장)
+    org.springframework.transaction: ${TRANSACTION_LOG_LEVEL:INFO} # 트랜잭션 로그
+  pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n"

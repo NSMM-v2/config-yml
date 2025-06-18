@@ -1,32 +1,57 @@
+# =================================
+# ESG Gateway Service 설정
+# 역할: API 게이트웨이, 라우팅, 로드밸런싱
+# 포트: 8080 (클라이언트 진입점)
+# =================================
+
 server:
-  port: 8080
+  port: 8080 # 게이트웨이 포트 (클라이언트 진입점)
 
 spring:
   application:
-    name: gateway-service
+    name: gateway-service # 서비스 식별명
+
+  # =================================
+  # Spring Cloud Gateway 라우팅 설정
+  # =================================
   cloud:
     gateway:
       routes:
-      - id: auth-service
-        uri: lb://auth-service
+      - id: auth-service # 인증 서비스 라우팅
+        uri: lb://auth-service # 로드밸런싱 사용
         predicates:
-        - Path=/api/v1/headquarters/**, /api/v1/partners/**
+        - Path=/api/v1/headquarters/**, /api/v1/partners/** # 인증 관련 API
 
-      - id: csddd-service
-        uri: lb://csddd-service
+      - id: csddd-service # CSDDD 서비스 라우팅
+        uri: lb://csddd-service # 로드밸런싱 사용
         predicates:
-        - Path=/api/v1/csddd/**
+        - Path=/api/v1/csddd/** # CSDDD 관련 API
 
+# =================================
+# JWT 설정 (게이트웨이 인증 검증용)
+# =================================
 jwt:
-  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly123456789}
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly123456789} # JWT 시크릿 키
 
+# =================================
+# Eureka Client 설정 (서비스 디스커버리)
+# =================================
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/} # Eureka 서버 주소
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: true # IP 주소 우선 사용
 
+# =================================
+# 로깅 설정 (게이트웨이 최적화)
+# =================================
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
+    root: INFO # 전체 기본 로그 레벨
+    org.springframework.cloud.gateway: ${GATEWAY_LOG_LEVEL:INFO} # 게이트웨이 로그 (환경변수 제어)
+    org.springframework.web: ${WEB_LOG_LEVEL:INFO} # 웹 요청 로그
+    org.springframework.security: ${SECURITY_LOG_LEVEL:WARN} # 보안 로그
+    com.nsmm.esg.gateway_service: DEBUG # 자체 패키지 상세 로그
+  pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n" # 컬러풀한 콘솔 출력

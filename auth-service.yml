@@ -81,8 +81,13 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+    registry-fetch-interval-seconds: 30
   instance:
     prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
     metadata-map:
       version: ${spring.application.version:1.0.0}
       description: "ESG 인증 서비스 - 본사/협력사 로그인, JWT 관리"

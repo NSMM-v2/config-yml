@@ -12,6 +12,11 @@ spring:
         predicates:
         - Path=/api/v1/headquarters/**, /api/v1/partners/**
 
+      - id: csddd-service
+        uri: lb://csddd-service
+        predicates:
+        - Path=/api/csddd/**
+
 jwt:
   secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly123456789}
 

@@ -51,12 +51,6 @@ spring:
           order_inserts: true
           order_updates: true
 
-  # =================================
-  # Config Server 설정
-  # =================================
-  config:
-    import: optional:configserver:http://localhost:8888
-
 # =================================
 # Eureka Client 설정
 # =================================
@@ -91,18 +85,18 @@ management:
     env:
       enabled: true
 
-# =================================
-# 로깅 설정
-# =================================
-logging:
-  level:
-    root: INFO
-    com.nsmm.esg.csddd_service: DEBUG
-    org.hibernate.SQL: ${LOG_SQL:false} # 대용량 처리시 false 권장
-  pattern:
-    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
-  file:
-    name: logs/csddd-service.log
-    max-size: 10MB
-    max-history: 30
+# # =================================
+# # 로깅 설정
+# # =================================
+# logging:
+#   level:
+#     root: INFO
+#     com.nsmm.esg.csddd_service: DEBUG
+#     org.hibernate.SQL: ${LOG_SQL:false} # 대용량 처리시 false 권장
+#   pattern:
+#     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+#     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+#   file:
+#     name: logs/csddd-service.log
+#     max-size: 10MB
+#     max-history: 30

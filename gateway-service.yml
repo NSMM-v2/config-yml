@@ -22,7 +22,7 @@ spring:
         predicates:
         - Path=/api/v1/headquarters/**, /api/v1/partners/** # 인증 관련 API
         filters:
-        - name: JwtAuthenticationGatewayFilter # JWT 인증 필터 적용
+        - name: JwtAuthentication # JWT 인증 필터 적용
           args:
             excludePaths: "/api/v1/headquarters/register,/api/v1/headquarters/login,/api/v1/headquarters/logout,/api/v1/headquarters/check-email,/api/v1/partners/login,/api/v1/partners/logout"
 
@@ -31,7 +31,7 @@ spring:
         predicates:
         - Path=/api/v1/csddd/** # CSDDD 관련 API
         filters:
-        - name: JwtAuthenticationGatewayFilter # JWT 인증 필터 적용
+        - name: JwtAuthentication # JWT 인증 필터 적용
 
 # =================================
 # JWT 설정 (게이트웨이 인증 검증용)

@@ -21,11 +21,17 @@ spring:
         uri: lb://auth-service # 로드밸런싱 사용
         predicates:
         - Path=/api/v1/headquarters/**, /api/v1/partners/** # 인증 관련 API
+        filters:
+        - name: JwtAuthenticationGatewayFilter # JWT 인증 필터 적용
+          args:
+            excludePaths: "/api/v1/headquarters/register,/api/v1/headquarters/login,/api/v1/headquarters/logout,/api/v1/headquarters/check-email,/api/v1/partners/login,/api/v1/partners/logout"
 
       - id: csddd-service # CSDDD 서비스 라우팅
         uri: lb://csddd-service # 로드밸런싱 사용
         predicates:
         - Path=/api/v1/csddd/** # CSDDD 관련 API
+        filters:
+        - name: JwtAuthenticationGatewayFilter # JWT 인증 필터 적용
 
 # =================================
 # JWT 설정 (게이트웨이 인증 검증용)
@@ -49,7 +55,7 @@ eureka:
 logging:
   level:
     root: INFO # 전체 기본 로그 레벨
-    org.springframework.cloud.gateway: ${GATEWAY_LOG_LEVEL:INFO} # 게이트웨이 로그 (환경변수 제어)
+    org.springframework.cloud.gateway: ${GATEWAY_LOG_LEVEL:DEBUG} # 게이트웨이 로그 (환경변수 제어)
     org.springframework.web: ${WEB_LOG_LEVEL:INFO} # 웹 요청 로그
     org.springframework.security: ${SECURITY_LOG_LEVEL:WARN} # 보안 로그
     com.nsmm.esg.gateway_service: DEBUG # 자체 패키지 상세 로그

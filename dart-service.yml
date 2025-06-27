@@ -14,7 +14,7 @@ server:
 
 spring:
   application:
-    name: dart-api-service
+    name: dart-service
 
   # =================================
   # 데이터베이스 설정 - MySQL

@@ -89,9 +89,6 @@ partner:
     base-url: ${PARTNER_API_BASE_URL:https://partner-api.example.com}
     client-id: ${PARTNER_API_CLIENT_ID:your-client-id}
     client-secret: ${PARTNER_API_CLIENT_SECRET:your-client-secret}
-  news:
-    scheduler:
-      enabled: ${PARTNER_NEWS_SCHEDULER_ENABLED:true} # 스케줄러 활성화 여부
 
 # =================================
 # Kafka 토픽 설정
@@ -102,7 +99,6 @@ kafka:
     disclosure: dart-disclosure
     corp-code: dart-corp-code
     partner-company: partner-company-updated
-    news-keywords: news-keywords
 
 # =================================
 # Resilience4j 설정 (API 호출 제한)

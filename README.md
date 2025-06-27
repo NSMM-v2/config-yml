@@ -9,7 +9,8 @@ backend/config-yml/
 ├── auth-service.yml       # 인증 서비스 (8081)
 ├── gateway-service.yml    # API 게이트웨이 (8080)
 ├── discovery-service.yml  # 서비스 디스커버리 (8761)
-└── csddd-service.yml      # CSDDD 공시 서비스 (8083)
+├── csddd-service.yml      # CSDDD 공시 서비스 (8083)
+└── dart-service.yml       # DART API 서비스 (8089)
 ```
 
 ---
@@ -169,6 +170,73 @@ export LOG_SQL=false
 
 ---
 
+## 📡 DART API Service (포트: 8089)
+
+**역할**: 금융감독원 DART API 연동, 기업 공시정보 수집, 파트너사 뉴스 모니터링
+
+### 필수 환경변수
+
+```bash
+# 데이터베이스 연결 (DART 전용 DB)
+DB_URL=jdbc:mysql://localhost:3306/esg_dart
+DB_USER=esg_user
+DB_PASS=esg_password
+
+# DART API 인증
+DART_API_KEY=your-dart-api-key-from-opendart-fss-or-kr
+
+# Kafka 연결
+KAFKA_BOOTSTRAP_SERVERS=localhost:9093
+```
+
+### 선택적 환경변수
+
+```bash
+# JPA 설정
+JPA_DDL_AUTO=update                    # create | update | validate | none
+JPA_SHOW_SQL=true                      # 개발: true, 운영: false
+
+# DART API 설정
+DART_API_BASE_URL=https://opendart.fss.or.kr
+
+# 파트너 API 설정 (뉴스 모니터링)
+PARTNER_API_BASE_URL=https://partner-api.example.com
+PARTNER_API_CLIENT_ID=your-client-id
+PARTNER_API_CLIENT_SECRET=your-client-secret
+PARTNER_NEWS_SCHEDULER_ENABLED=true   # 뉴스 스케줄러 활성화
+
+# 보안 설정 (개발용)
+SECURITY_USER_NAME=admin
+SECURITY_USER_PASSWORD=admin
+
+# Eureka 서버
+EUREKA_SERVICE_URL=http://localhost:8761/eureka/
+
+# 애플리케이션 버전
+spring.application.version=1.0.0
+```
+
+### 개발환경 권장 설정
+
+```bash
+export DB_URL=jdbc:mysql://localhost:3306/esg_dart
+export DB_USER=esg_user
+export DB_PASS=esg_password
+export DART_API_KEY=your-dart-api-key
+export KAFKA_BOOTSTRAP_SERVERS=localhost:9093
+export JPA_SHOW_SQL=true
+export PARTNER_NEWS_SCHEDULER_ENABLED=true
+```
+
+### DART API 키 발급 방법
+
+1. [DART 전자공시시스템](https://dart.fss.or.kr) 접속
+2. 회원가입 및 로그인
+3. 개발자센터 > API 신청
+4. 발급받은 API 키를 `DART_API_KEY` 환경변수에 설정
+
+---
+
 ## 🚀 전체 서비스 실행 가이드
 
 ### 1. 최소 환경변수 설정 (개발환경)
@@ -179,10 +247,20 @@ export DB_URL=jdbc:mysql://localhost:3306/esg_auth
 export DB_USERNAME=esg_user
 export DB_PASSWORD=esg_password
 
-# 2. JWT 설정 (Auth Service + Gateway Service 공통)
+# 2. DART Service 전용 데이터베이스 설정
+export DB_USER=esg_user  # DART Service에서 사용하는 변수명
+export DB_PASS=esg_password  # DART Service에서 사용하는 변수명
+
+# 3. JWT 설정 (Auth Service + Gateway Service 공통)
 export JWT_SECRET=dev-secret-key-for-development
 
-# 3. 개발 편의 설정
+# 4. DART API 설정
+export DART_API_KEY=your-dart-api-key
+
+# 5. Kafka 설정 (DART Service용)
+export KAFKA_BOOTSTRAP_SERVERS=localhost:9093
+
+# 6. 개발 편의 설정
 export JPA_SHOW_SQL=true
 export JWT_COOKIE_SECURE=false
 ```
@@ -199,7 +277,10 @@ cd backend/auth-service && ./gradlew bootRun &
 # 3단계: CSDDD Service (DB 설정 필요)
 cd backend/csddd-service && ./gradlew bootRun &
 
-# 4단계: Gateway Service (JWT 설정 필요)
+# 4단계: DART API Service (DB + DART API + Kafka 설정 필요)
+cd backend/dart-service && ./gradlew bootRun &
+
+# 5단계: Gateway Service (JWT 설정 필요)
 cd backend/gateway-service && ./gradlew bootRun &
 ```
 
@@ -207,10 +288,11 @@ cd backend/gateway-service && ./gradlew bootRun &
 
 ```bash
 # 각 서비스 상태 확인
-curl http://localhost:8761/eureka/apps    # Discovery: 등록된 서비스 목록
-curl http://localhost:8081/actuator/env   # Auth: 환경변수 확인
-curl http://localhost:8083/actuator/env   # CSDDD: 환경변수 확인
-curl http://localhost:8080/actuator/env   # Gateway: 환경변수 확인
+curl http://localhost:8761/eureka/apps        # Discovery: 등록된 서비스 목록
+curl http://localhost:8081/actuator/env       # Auth: 환경변수 확인
+curl http://localhost:8083/actuator/env       # CSDDD: 환경변수 확인
+curl http://localhost:8089/api/v1/actuator/env # DART: 환경변수 확인
+curl http://localhost:8080/actuator/env       # Gateway: 환경변수 확인
 ```
 
 ---
@@ -275,14 +357,35 @@ echo "JWT_SECRET: [설정됨: $(test -n "$JWT_SECRET" && echo "YES" || echo "NO"
 
 ```bash
 # 개발환경 설정
+
+# 공통 데이터베이스 설정 (Auth, CSDDD)
 DB_URL=jdbc:mysql://localhost:3306/esg_auth
 DB_USERNAME=esg_user
 DB_PASSWORD=esg_password
+
+# DART Service 전용 데이터베이스 설정
+DB_USER=esg_user
+DB_PASS=esg_password
+
+# JWT 인증 설정
 JWT_SECRET=dev-secret-key-for-jwt-auth-service-development
+
+# DART API 설정
+DART_API_KEY=your-dart-api-key-from-opendart
+
+# Kafka 설정
+KAFKA_BOOTSTRAP_SERVERS=localhost:9093
+
+# JPA 설정
 JPA_SHOW_SQL=true
 JWT_COOKIE_SECURE=false
 JPA_DDL_AUTO=update
+
+# Eureka 설정
 EUREKA_SERVER=http://localhost:8761/eureka/
+EUREKA_SERVICE_URL=http://localhost:8761/eureka/
+
+# 애플리케이션 버전
 spring.application.version=1.0.0-dev
 ```
 

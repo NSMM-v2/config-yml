@@ -40,6 +40,15 @@ spring:
         filters:
         - name: JwtAuthentication # JWT 인증 필터 적용
 
+      - id: dart-service # DART API 서비스 라우팅
+        uri: lb://dart-service # 로드밸런싱 사용
+        predicates:
+        - Path=/api/v1/dart/**, /api/v1/partners/** # DART API 및 파트너사 관련 API
+        filters:
+        - name: JwtAuthentication # JWT 인증 필터 적용
+          args:
+            excludePaths: "/api/v1/dart/corp-codes,/api/v1/dart/corp-codes/search,/api/v1/partners/unique-partner-companies"
+
 # =================================
 # JWT 설정 (게이트웨이 인증 검증용)
 # =================================

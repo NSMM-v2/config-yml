@@ -24,7 +24,7 @@ spring:
         filters:
         - name: JwtAuthentication # JWT 인증 필터 적용
           args:
-            excludePaths: "/api/v1/headquarters/register,/api/v1/headquarters/login,/api/v1/headquarters/logout,/api/v1/headquarters/check-email,/api/v1/partners/login,/api/v1/partners/logout"
+            excludePaths: "/api/v1/auth/headquarters/register,/api/v1/auth/headquarters/login,/api/v1/auth/headquarters/logout,/api/v1/auth/headquarters/check-email,/api/v1/auth/partners/login,/api/v1/auth/partners/logout"
 
       - id: scope-service # scope 서비스 라우팅
         uri: lb://scope-service # 로드밸런싱 사용

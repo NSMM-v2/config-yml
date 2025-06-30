@@ -20,7 +20,7 @@ spring:
       - id: auth-service # 인증 서비스 라우팅
         uri: lb://auth-service # 로드밸런싱 사용
         predicates:
-        - Path=/api/v1/headquarters/**, /api/v1/partners/** # 인증 관련 API
+        - Path=/api/v1/auth/headquarters/**, /api/v1/auth/partners/** # 인증 관련 API
         filters:
         - name: JwtAuthentication # JWT 인증 필터 적용
           args:

@@ -57,11 +57,11 @@ spring:
 # =================================
 jwt:
   secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly123456789}
-  expiration: 900000 # Access Token: 15분 (밀리초)
+  expiration: 86400000 # Access Token: 24시간 (밀리초)
   refresh-expiration: 604800000 # Refresh Token: 7일 (밀리초)
   cookie:
     name: jwt
-    max-age: 900 # 쿠키 만료시간: 15분 (초)
+    max-age: 86400 # 쿠키 만료시간: 24시간 (초)
     secure: ${JWT_COOKIE_SECURE:false} # HTTPS에서만 전송 (운영환경: true)
     http-only: true # XSS 방지
     same-site: strict # CSRF 방지

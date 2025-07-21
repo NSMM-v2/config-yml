@@ -113,3 +113,12 @@ logging:
     org.springframework.transaction: ${TRANSACTION_LOG_LEVEL:INFO} # 트랜잭션 로그
   pattern:
     console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n"
+
+# =================================
+# Feign Client 설정
+# =================================
+feign:
+  client:
+    config:
+      auth-service:
+        url: ${AUTH_SERVICE_URL:http://localhost:8081} # auth-service 주소

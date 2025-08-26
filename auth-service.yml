@@ -117,8 +117,8 @@ logging:
     # === N+1 문제 진단용 로깅 ===
     org.hibernate.SQL: DEBUG # SQL 쿼리 로깅 (N+1 진단용)
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE # SQL 파라미터 로깅
-    org.hibernate.stat: DEBUG # Hibernate 통계 로깅
-    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: INFO # 세션 통계
+    org.hibernate.stat: INFO # Hibernate 통계 로깅 (요약만)
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: WARN # 세션 통계 (숨김)
     org.springframework.transaction: ${TRANSACTION_LOG_LEVEL:DEBUG} # 트랜잭션 로그 강화
   pattern:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n"

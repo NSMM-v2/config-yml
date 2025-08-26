@@ -33,7 +33,7 @@ spring:
       leak-detection-threshold: 60000 # 긴 트랜잭션 감지 (성능 모니터링용)
 
   # =================================
-  # JPA/Hibernate 설정
+  # JPA/Hibernate 설정 (N+1 문제 진단 강화)
   # =================================
   jpa:
     hibernate:
@@ -46,11 +46,16 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
         use_sql_comments: true
+        generate_statistics: true # N+1 문제 진단: Hibernate 통계 수집 활성화
         default_batch_fetch_size: 100
         jdbc:
           batch_size: 20
           order_inserts: true
           order_updates: true
+        session:
+          events:
+            log:
+              LOG_QUERIES_SLOWER_THAN_MS: 50 # N+1 문제 진단: 50ms 이상 쿼리 로깅
 
 # =================================
 # JWT 인증 설정
@@ -101,7 +106,7 @@ management:
       enabled: true
 
 # =================================
-# 콘솔 로깅 설정 
+# N+1 문제 진단 강화 로깅 설정 
 # =================================
 logging:
   level:
@@ -109,7 +114,14 @@ logging:
     com.nsmm.esg.auth_service: DEBUG
     org.springframework.security: ${SECURITY_LOG_LEVEL:INFO} # 보안 관련 로그
     org.springframework.web: ${WEB_LOG_LEVEL:INFO} # 웹 요청 로그
-    org.hibernate.SQL: ${LOG_SQL:false} # SQL 로그 (개발시에만 true 권장)
-    org.springframework.transaction: ${TRANSACTION_LOG_LEVEL:INFO} # 트랜잭션 로그
+    # === N+1 문제 진단용 로깅 ===
+    org.hibernate.SQL: DEBUG # SQL 쿼리 로깅 (N+1 진단용)
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # SQL 파라미터 로깅
+    org.hibernate.stat: DEBUG # Hibernate 통계 로깅
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: INFO # 세션 통계
+    org.springframework.transaction: ${TRANSACTION_LOG_LEVEL:DEBUG} # 트랜잭션 로그 강화
   pattern:
-    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n"
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n"
+  file:
+    name: logs/n1-performance-analysis.log # N+1 문제 분석 전용 로그 파일
+    pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"

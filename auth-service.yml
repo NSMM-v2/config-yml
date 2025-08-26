@@ -90,17 +90,29 @@ eureka:
       description: "ESG 인증 서비스 - 본사/협력사 로그인, JWT 관리"
 
 # =================================
-# Actuator 모니터링 설정
+# Actuator 모니터링 설정 (Prometheus 메트릭 포함)
 # =================================
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,env,configprops
+        include: health,info,metrics,env,configprops,prometheus # Prometheus 엔드포인트 추가
       base-path: /actuator
   endpoint:
     health:
       show-details: always
+    prometheus:
+      enabled: true # Prometheus 메트릭 수집 활성화
+  metrics:
+    export:
+      prometheus:
+        enabled: true # Prometheus 형식으로 메트릭 내보내기
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true # HTTP 요청 응답시간 히스토그램
+        jvm.gc.pause: true # GC 일시정지 시간 히스토그램
+    tags:
+      application: ${spring.application.name} # 메트릭에 애플리케이션 태그 추가
   info:
     env:
       enabled: true

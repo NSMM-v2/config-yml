@@ -9,17 +9,11 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus # Prometheus 엔드포인트 추가
-      base-path: /actuator
+        include: "health,info,metrics,prometheus" # Prometheus 엔드포인트 노출
   endpoint:
     health:
       show-details: always
-    prometheus:
-      enabled: true # Prometheus 메트릭 수집 활성화
   metrics:
-    export:
-      prometheus:
-        enabled: true # Prometheus 형식으로 메트릭 내보내기
     distribution:
       percentiles-histogram:
         http.server.requests: true # HTTP 요청 응답시간 히스토그램
